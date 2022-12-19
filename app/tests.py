@@ -4,7 +4,7 @@ import unittest
 
 class ApiTests(unittest.TestCase):
     def setUp(self):
-        self.app = app = create_app("app.config.TestingConfig")
+        self.app = create_app("app.config.TestingConfig")
 
     def test_root(self):
         with self.app.test_client() as client:
