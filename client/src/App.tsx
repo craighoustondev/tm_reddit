@@ -1,15 +1,14 @@
 import {useQuery, QueryClientProvider, QueryClient} from "@tanstack/react-query"
 import React from 'react';
 import axios from 'axios';
-import { Box, Button, ButtonGroup, Card, CardBody, CardFooter, CardHeader, Flex, Heading, Icon, IconProps, Image, Input, InputGroup, InputLeftElement, OmitCommonProps, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, Card, CardBody, CardFooter, CardHeader, Flex, Heading, Icon, IconProps, Image, Input, InputGroup, InputLeftElement, List, OmitCommonProps, Spacer, Stack, Text } from '@chakra-ui/react'
 import { ChatIcon, DownloadIcon, ExternalLinkIcon, HamburgerIcon, SearchIcon,} from '@chakra-ui/icons';
-
 
 const queryClient = new QueryClient();
 
 const fetcher = () =>
   axios
-    .get("http://127.0.0.1:5000/sample")
+    .get("http://127.0.0.1:5000/submissions")
     .then((res) => res.data);
 
   export const App: React.FunctionComponent = () => {
@@ -17,8 +16,7 @@ const fetcher = () =>
       <QueryClientProvider client={queryClient}>
         <Navbar />
         <Stack spacing='16' p='16' bg="brand.back">
-          <SubmissionCard/>
-          <SubmissionCard />
+          <SubmissionCardList />
         </Stack>
       </QueryClientProvider>
     );
@@ -71,12 +69,7 @@ function useSubmission() {
   return useQuery(["sample"], fetcher);
 }
 
-function SubmissionCard() {
-  const { data, error, isLoading } = useSubmission();
-
-  if (isLoading) return <p>Loading</p>;
-  if (error) return <p>An error occurred</p>;
-
+function SubmissionCard(submissionData: Submission) {
   return (
     <Card maxW='md' bg="white">
       <CardHeader>
@@ -85,20 +78,20 @@ function SubmissionCard() {
             <CircleIcon boxSize={8} color='red.500' />
 
             <Box>
-              <Heading size='sm'>{data.subreddit_name_prefixed}</Heading>
-              <Text>Posted by {data.author}</Text>
+              <Heading size='sm'>{submissionData.subreddit_name}</Heading>
+              <Text>Posted by {submissionData.author}</Text>
             </Box>
           </Flex>
         </Flex>
       </CardHeader>
       <CardBody>
         <Text>
-          {data.title}
+          {submissionData.title}
         </Text>
       </CardBody>
       <Image
         objectFit='cover'
-        src='https://picsum.photos/200/100'
+        src={`https://picsum.photos/id/${submissionData.id}/200/100`}
         alt='Chakra UI'
       />
 
@@ -111,11 +104,41 @@ function SubmissionCard() {
           },
         }}
       >
-        <ChatIcon /> 88 Comments
+        <ChatIcon /> {Math.floor(Math.random() * 100)} Comments
         <ExternalLinkIcon /> Share
         <DownloadIcon /> Save
         <HamburgerIcon />
       </CardFooter>
     </Card>
   )
+}
+
+type Submission = {
+  id: number;
+  subreddit_name: string;
+  author: string;
+  title: string;
+};
+
+function SubmissionCardList(): JSX.Element {
+  const { data, error, isLoading } = useSubmission();
+
+  if (isLoading) return <p>Loading</p>;
+  if (error) return <p>An error occurred</p>;
+
+  const submissionItems: Submission[] = data.map((item: any) => {
+    const s: Submission = {
+      id: item.id,
+      subreddit_name: item.subreddit_name_prefixed,
+      author: item.author,
+      title: item.title,
+    };
+    return s;
+  })
+
+  return <>{
+    submissionItems.map((item: Submission) => (
+      <SubmissionCard {...item}></SubmissionCard>
+    ))
+  }</>
 }
